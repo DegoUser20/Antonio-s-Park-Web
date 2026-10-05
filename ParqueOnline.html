@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parque Diversiones - online</title>
+    <style>
+
+        .contenido-ticket {
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        #errores,
+        #ticket,
+        #formulario {
+
+            position: absolute;
+            width: 400px;
+            height: 600px;
+            background-color: #e8f0fe;
+            border: 1px solid black;
+
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+
+            padding: 20px;
+            box-sizing: border-box;
+
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+
+        #formulario {
+            z-index: 20;
+            
+        }
+
+        #formulario h1, h3, h4 {
+            text-align: center;
+        }
+
+        /*Diseño de capa de errores*/
+        #errores {
+            background-color: #e8f0fe;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /*Diseño de titulo*/
+        #errores h4{
+            text-align: center;
+            color: red;
+            font-size: 20px;
+        }
+
+        /*Diseño de subtitulos de los errores y boton de los errores*/
+        #errores li {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        #errores button {
+            display: block;
+            margin: auto;
+            font-size: 15px;
+
+        }
+
+        #ticket {
+            background-color: #e8f0fe;
+            z-index: 5;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+
+        #ticket h2 {
+            text-align: center;
+            color: green;
+        }
+    </style>
+</head>
+
+
+<body>
+
+
+    <div id="formulario">
+        <h1>Antonio's Park</h1>
+        <h3>El mejor lugar para divertirte</h3>
+
+        <h4>Introduce tus datos</h4>
+
+        <form name="reserva">
+            <label>Entradas normales (18,00€)</label>
+            <input type="number" name="normal" min="0" max="10" value="0"><br>
+
+            <label>Mayores de 65 (12,00€)</label>
+            <input type="number" name="mayor" min="0" max="10" value="0"><br>
+
+            <label>Cadete de 6 a 12 años (6,00€)</label>
+            <input type="number" name="cadete" min="0" max="10" value="0"><br>
+
+            <label>Infantil hasta los 6 años (2,00€)</label>
+            <input type="number" name="infantil" min="0" max="10" value="0"><br>
+
+            <label>Día de acceso</label>
+            <select name="dia">
+                <option value="">---Selecciona el día: ---</option>
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miercoles">Miercoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+            </select><br>
+
+            <!--Método de pago -->
+            <label>Método de pago</label>
+            <br>
+            <input type="radio" name="pago" value="tarjeta"> Tarjeta<br>
+            <input type="radio" name="pago" value="bizum"> Bizum<br>
+            <input type="radio" name="pago" value="efectivo"> Efectivo<br>
+
+            <button type="button" onclick="calcular()">Reservar</button>
+
+        </form>
+
+    </div>
+    <!--capas de errores y tickets para el formulario-->
+    <div id="errores">
+        
+    </div>
+    <div id="ticket"></div>
+
+
+
+
+    <script type="text/javascript">
+
+        function volver() {
+            //document.reserva.reset();
+
+            document.getElementById("formulario").style = "z-index: 20;";
+            document.getElementById("errores").style = "z-index: 10;";
+            document.getElementById("ticket").style = "z-index: 5;"
+        }
+
+        //Variables para validar los datos del formulario
+        const MAXIMO_ENTRADAS = 10;
+        console.log(MAXIMO_ENTRADAS);
+        const PRECIO_NORMAL = 18;
+        const PRECIO_MAYOR = 12;
+        const PRECIO_CADETE = 6;
+        const PRECIO_INFANTIL = 2;
+        const DESCUENTO = 0.20;
+        const IVA = 0.21;
+        const DIAS_CON_DESCUENTO = ["Lunes", "Martes", "Miercoles", "Jueves"];
+
+        function calcular() {
+            const errores = validarDatos();
+
+            if (errores.length > 0) {
+                mostrarErrores(errores);
+            } else {
+
+                const datosReserva = pagarReserva();
+                mostrarTicket(datosReserva);
+            }
+        }
+
+        //Aqui validamos los datos
+        function validarDatos() {
+            const errores = [];
+
+            //variables para nuestro formulario
+            const normal = Number(document.reserva.normal.value);
+            const mayor = Number(document.reserva.mayor.value);
+            const cadete = Number(document.reserva.cadete.value);
+            const infantil = Number(document.reserva.infantil.value);
+            const dia = document.reserva.dia.value;
+            const pago = document.reserva.pago.value;
+
+            const totalEntradas = normal + mayor + cadete + infantil;
+            const totalAdulto = (normal + mayor);
+            const totalMenores = (cadete + infantil);
+
+            if (totalEntradas === 0) {
+                errores.push("Debes seleccionar al menos una entrada. ");
+            }
+
+            if (totalEntradas > MAXIMO_ENTRADAS) {
+                errores.push("El máximo es 10 entradas");
+            }
+
+            if (totalMenores > 0 && totalAdulto === 0) {
+                errores.push("Los cadetes y infantiles deben ir acompañados de un adulto. ");
+            }
+
+            if (dia === "") {
+                errores.push("Debes seleccionar el día de acceso.");
+            }
+
+            if (pago === "") {
+                errores.push("Debes Selecciona un método de pago");
+            }
+            return errores;
+
+
+        }
+
+        //Mostrarmos errores
+        function mostrarErrores(errores) {
+            console.log(errores);
+            var html = "<h4>Alerta</h4><ul>";
+
+            for (var i = 0; i < errores.length; i++) {
+                html = html + "<li>" + errores[i] + "</li>"
+            }
+
+            html = html + "</ul>" + "<button type='button' onclick='volver()'>Volver</button>";
+
+            document.getElementById("errores").innerHTML = html;
+            document.getElementById("errores").style = "z-index: 25;";
+        }
+
+        function mostrarTicket(datosReserva) {
+            
+
+            //Mostramos los objetos para el ticket
+            const cantidadNormal = datosReserva.normal;
+            const cantidadMayor = datosReserva.mayor;
+            const cantidadCadete = datosReserva.cadete;
+            const cantidadInfantil = datosReserva.infantil;
+
+            const dia = datosReserva.dia;
+            const pago = datosReserva.pago;
+
+            const precioBase = datosReserva.precioBase;
+            const importeDescuento = datosReserva.importeDescuento;
+            const precioConDescuento = datosReserva.precioConDescuento;
+            const importeIVA = datosReserva.importeIVA;
+            const precioTotal = datosReserva.precioTotal; 
+            //Declaramos mensaje
+            var html = "<h2>Tu Ticket se proceso correctamente!!!</h2><ul>";
+            
+            const mensaje = "<div class='contenido-ticket'>" + 
+                            "Entradas Normales: " + cantidadNormal + "<br>" +
+                            "\nMayores de 65 años: " + cantidadMayor + "<br>" +
+                            "\nCadetes: " + cantidadCadete + "<br>" +
+                            "\nInfantiles: " + cantidadInfantil +
+                            "<br>" +
+                            "<br>" +
+                            "<br>" +
+                            "Dia Seleccionado: " + dia + "<br>" +
+                            "Método de Pago: " + pago +
+                            "<br><br>--------------------<br><br>" + 
+                            "Precio Base: <strong>" + precioBase.toFixed(2) + " € " + "</strong><br>" + 
+                            "Descuento: " + importeDescuento.toFixed(2) + " €"+
+                            "<br>Precio con Descuento: " + precioConDescuento.toFixed(2) + " € " +
+                            "<br>IVA: " + importeIVA.toFixed(2) + " € "+
+                            "<br>Precio Total: <strong>" + precioTotal.toFixed(2) + " €" + "</strong>" +
+                            "</div>";
+
+            html = html + mensaje;
+
+            html = html + "<br>" + "<button type='button' onclick='volver()'>Volver</button>";
+
+
+            document.getElementById("ticket").innerHTML = html;
+            document.getElementById("ticket").style = "z-index: 25;"
+        }
+        //Hacer o calcular el pago
+        function pagarReserva() {
+            const normal = Number(document.reserva.normal.value);
+            const mayor = Number(document.reserva.mayor.value);
+            const cadete = Number(document.reserva.cadete.value);
+            const infantil = Number(document.reserva.infantil.value);
+
+            const dia = document.reserva.dia.value;
+            const pago = document.reserva.pago.value;
+
+            //Cantidad de entradas
+            const totalEntradas = normal + mayor + cadete + infantil;
+
+            const precioNormal = PRECIO_NORMAL * normal;
+            const precioMayor = PRECIO_MAYOR * mayor;
+            const precioCadete = PRECIO_CADETE * cadete;
+            const precioInfantil = PRECIO_INFANTIL * infantil;
+            
+            //Calculo de dinero y precio
+            const precioBase = precioNormal + precioMayor + precioCadete + precioInfantil;
+        
+            //Variables para calcular el descuento y el IVA
+            let importeDescuento;
+            let precioConDescuento;
+            let importeIVA;
+            let precioTotal;
+
+            //Calcular descuento y IVA 21%
+            if(DIAS_CON_DESCUENTO.includes(dia)) {
+                importeDescuento = precioBase * DESCUENTO;
+                
+            } else {
+                importeDescuento = 0;
+            
+            }
+            precioConDescuento = precioBase - importeDescuento;
+            importeIVA = IVA * precioConDescuento;
+            precioTotal = importeIVA + precioConDescuento
+            
+            //Mostrar en el ticket
+            //normal, mayor, cadete, infantil, dia, pago
+
+            //Del cálculo
+            //precioNormal, precioMayor, precioCadete, precioInfantil
+            //precioBase, importeDescuento, precioConDescuento, importeIVA, precioTotal
+
+            return {
+                normal: normal,
+                mayor: mayor,
+                cadete: cadete,
+                infantil: infantil,
+                dia: dia,
+                pago: pago,
+                precioNormal: precioNormal,
+                precioMayor: precioMayor,
+                precioCadete: precioCadete,
+                precioInfantil: precioInfantil,
+
+                precioBase: precioBase,
+                importeDescuento: importeDescuento,
+                precioConDescuento: precioConDescuento,
+                importeIVA: importeIVA,
+                precioTotal: precioTotal,
+                totalEntradas: totalEntradas
+            }
+        }
+    </script>
+
+</body>
+
+</html>
